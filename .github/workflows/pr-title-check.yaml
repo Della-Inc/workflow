@@ -2,6 +2,9 @@ name: PR title check
 
 on:
   workflow_call:
+    secrets:
+      TAG_RELEASE_TOKEN:  # 👈 Define the expected secret
+        required: true
 
 # permissions:
 #   pull-requests: write
@@ -15,7 +18,7 @@ jobs:
         id: lint_pr_title
         name: Conventional commit title check
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TAG_RELEASE_TOKEN }}
         with:
           requireScope: false
           subjectPattern: ^(#(\S{9,}) ).+$
