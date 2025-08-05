@@ -17,7 +17,7 @@ on:
         required: true
 
 jobs:
-  create-release:
+  github-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
