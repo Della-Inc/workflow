@@ -35,4 +35,4 @@ jobs:
           body: ${{ inputs.body }}
           target_commitish: ${{ inputs.target_commitish }}
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
