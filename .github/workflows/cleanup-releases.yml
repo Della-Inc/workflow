@@ -1,0 +1,59 @@
+name: cleanup-releases
+
+on:
+  workflow_call:
+    inputs:
+      tag_pattern:
+        required: true
+        type: string
+        description: "Tag glob pattern to clean up (e.g. dev/v*)"
+      keep:
+        required: false
+        type: number
+        default: 10
+        description: "Number of latest releases to keep"
+    secrets:
+      GH_TOKEN:
+        required: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete old releases and tags
+        run: |
+          keep=${{ inputs.keep }}
+          tags=$(git tag --list '${{ inputs.tag_pattern }}' --sort=-version:refname | tail -n +$(( keep + 1 )))
+
+          if [ -z "$tags" ]; then
+            echo "No old ${{ inputs.tag_pattern }} tags to clean up"
+            exit 0
+          fi
+
+          keeping=$(git tag --list '${{ inputs.tag_pattern }}' --sort=-version:refname | head -n $keep)
+          echo "::group::Keeping $(echo "$keeping" | wc -l | xargs) tags"
+          echo "$keeping"
+          echo "::endgroup::"
+
+          echo "::group::Deleting $(echo "$tags" | wc -l | xargs) old tags"
+          echo "$tags"
+          echo "::endgroup::"
+
+          for tag in $tags; do
+            echo "::group::Processing $tag"
+            echo "Trying to delete release $tag..."
+            if gh release delete "$tag" --yes --cleanup-tag 2>/dev/null; then
+              echo "Successfully deleted release and tag $tag"
+            else
+              echo "Failed to delete release $tag, trying to delete tag..."
+              git push origin --delete "$tag"
+              echo "Successfully deleted tag $tag"
+            fi
+            echo "::endgroup::"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
