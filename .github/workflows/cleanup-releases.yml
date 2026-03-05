@@ -43,8 +43,12 @@ jobs:
           echo "$tags"
           echo "::endgroup::"
 
+          total=$(echo "$tags" | wc -l | xargs)
+          current=0
           for tag in $tags; do
-            echo "::group::Processing $tag"
+            current=$((current + 1))
+            remaining=$((total - current))
+            echo "::group::Processing $tag ($current/$total, $remaining left)"
             echo "Trying to delete release $tag..."
             if gh release delete "$tag" --yes --cleanup-tag 2>/dev/null; then
               echo "Successfully deleted release and tag $tag"
